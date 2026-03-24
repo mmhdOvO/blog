@@ -1,0 +1,74 @@
+# ==============================
+# Docker 构建忽略文件
+# 作用类似 .gitignore，排除不需要进入构建上下文的文件
+# ==============================
+
+# 鸿蒙端代码（完全不需要进入 Docker 构建）
+harmony_client/
+ohos_modules/
+hvigor/
+.hvigor/
+build/
+local.properties
+
+# Git 相关
+.git/
+.gitignore
+.gitattributes
+
+# 临时文件
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Maven 编译产物（构建时会重新编译，不需要带进去）
+target/
+build/
+*.jar
+*.war
+*.ear
+
+# IDE 配置和临时文件
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.settings/
+.project
+.classpath
+
+# 环境变量文件（安全性：不要让镜像看到本地的 .env）
+.env
+.env.local
+.env.*
+!.env.example  # 保留模板文件
+
+# 日志文件
+logs/
+*.log
+nohup.out
+
+# OS 生成的文件
+Thumbs.db
+.DS_Store
+Desktop.ini
+*~
+
+# Maven 本地仓库缓存
+.m2/
+.repository/
+
+# SQL 备份文件（不需要进入镜像，但 init.sql 还是需要的）
+sql/*.bak
+sql/*.backup
+sql/*.sql.gz
+
+# Docker 相关（自己的配置不需要打包）
+docker-compose.override.yml
+docker-compose.dev.yml
+
+# 文档相关（构建时不需要）
+*.md
+docs/
+doc/

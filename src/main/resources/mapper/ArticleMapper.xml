@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.demo.mapper.ArticleMapper">
+
+    <insert id="insertArticle" parameterType="com.example.demo.entity.Article" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO article (title,content,user_id,create_time)
+    VALUES (#{title},#{content},#{userId},NOW())
+    </insert>
+
+    <select id="findById" resultType="com.example.demo.entity.Article">
+        SELECT * FROM article WHERE id = #{id}
+    </select>
+
+    <select id="findAll" resultType="com.example.demo.entity.Article">
+        SELECT a.* FROM article a
+        LEFT JOIN user u ON a.user_id = u.id
+        <where>
+            <!-- 当查询所有用户文章时（userId为null），只显示已发布和复核通过的文章 -->
+            <!-- 当查询特定用户文章时（userId不为null），显示该用户所有状态的文章（包括待审核、不合规等） -->
+            <choose>
+                <when test="userId == null">
+                    a.status IN (1, 4)
+                </when>
+                <otherwise>
+                    a.user_id = #{userId}
+                </otherwise>
+            </choose>
+            <if test="keyword != null and keyword != ''">
+                AND (a.title LIKE CONCAT('%', #{keyword}, '%') OR u.username LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY a.create_time DESC
+    </select>
+
+    <update id="updateArticle">
+        UPDATE article
+        SET title = #{title},
+            content = #{content}
+        WHERE id = #{id} AND user_id =  #{userId}
+    </update>
+
+    <update id="updateArticleAsAdmin">
+        UPDATE article
+        SET title = #{title},
+            content = #{content}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM article WHERE id = #{id}
+    </delete>
+
+    <update id="incrementViewCount">
+        UPDATE article SET view_count =  view_count + 1 WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE article SET status = #{status} WHERE id = #{id}
+    </update>
+
+
+</mapper>

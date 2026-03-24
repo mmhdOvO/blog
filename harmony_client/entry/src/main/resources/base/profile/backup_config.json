@@ -1,0 +1,9 @@
+{
+  "isAllowBackup": true,
+  "includeData": [
+    {
+      "src": "~/data/*",
+      "target": "."
+    }
+  ]
+}

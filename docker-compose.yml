@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0.36
+    container_name: blog-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-123456}
+      MYSQL_DATABASE: ${DB_NAME:-blog_db}
+      MYSQL_USER: ${DB_USERNAME:-blog_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-123456}
+    ports:
+      - "${DB_PORT:-3307}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d  # 自动执行初始化 SQL
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    networks:
+      - blog-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-123456}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis（可选，注释掉即可禁用）
+  redis:
+    image: redis:7.2-alpine
+    container_name: blog-redis
+    restart: always
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6380}:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - blog-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 后端服务
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # 不要指定 image: blog-backend:latest - 避免 Docker Hub 拉取失败
+    container_name: blog-backend
+    restart: always
+    ports:
+      - "${SERVER_PORT:-8082}:8082"
+    environment:
+      # 数据库配置（使用容器内部的服务名作为主机名）
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${DB_NAME:-blog_db}?serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-123456}
+      
+      # JWT 配置
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+      
+      # DeepSeek AI 配置
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
+      
+      # Redis 配置（可选）
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      
+      # 激活的配置文件
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+    volumes:
+      - backend_logs:/app/logs
+    networks:
+      - blog-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy  # 如果不需要 Redis，注释掉这行
+    # 后端健康检查需要安装额外工具，暂时简化
+    # healthcheck:
+    #   test: ["CMD-SHELL", "ss -tuln | grep :8082 || exit 1"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 90s
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_logs:
+    driver: local
+
+networks:
+  blog-network:
+    driver: bridge

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.demo.mapper.ReviewAppealMapper">
+
+    <insert id="insertAppeal" parameterType="com.example.demo.entity.ReviewAppeal" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO review_appeal (article_id, user_id, reason, create_time, status)
+        VALUES (#{articleId}, #{userId}, #{reason}, NOW(), 0)
+    </insert>
+
+    <select id="findById" resultType="com.example.demo.entity.ReviewAppeal">
+        SELECT * FROM review_appeal WHERE id = #{id}
+    </select>
+
+    <select id="findByArticleId" resultType="com.example.demo.entity.ReviewAppeal">
+        SELECT * FROM review_appeal WHERE article_id = #{articleId} ORDER BY create_time DESC LIMIT 1
+    </select>
+
+    <select id="findByStatus" resultType="com.example.demo.entity.ReviewAppeal">
+        SELECT * FROM review_appeal
+        <where>
+            <if test="status != null">
+                status = #{status}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <update id="updateAppeal" parameterType="com.example.demo.entity.ReviewAppeal">
+        UPDATE review_appeal
+        SET status = #{status},
+            handle_time = #{handleTime},
+            handler_id = #{handlerId},
+            handler_note = #{handlerNote}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

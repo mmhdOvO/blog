@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.mapper.UserMapper">
+
+    <!-- 查询所有用户 -->
+    <select id="findAll" resultType="com.example.demo.entity.User">
+        SELECT * FROM user
+    </select>
+
+    <select id="findByUsername" resultType="com.example.demo.entity.User">
+        SELECT * FROM user WHERE username = #{username}
+    </select>
+
+    <insert id="insertUser" parameterType="com.example.demo.entity.User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user (username, password, nickname, role, create_time)
+        VALUES (#{username}, #{password}, #{nickname}, #{role}, NOW())
+    </insert>
+    
+    <delete id="deleteById">
+            DELETE FROM user WHERE id = #{id}
+    </delete>
+
+    <update id="updateById">
+        UPDATE user
+        <set>
+            <if test="username != null and username != ''">
+                username = #{username},
+            </if>
+            <if test="password != null and password != ''">
+                password = #{password},
+            </if>
+            <if test="nickname != null and nickname != ''">
+                nickname = #{nickname},
+            </if>
+            <if test="role != null and role != ''">
+                role = #{role},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+
+
+</mapper>
