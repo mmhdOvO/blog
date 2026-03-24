@@ -34,3 +34,6 @@ build/
 
 # local-only config (secrets)
 src/main/resources/application-local.properties
+
+.env
+*.log
